@@ -353,7 +353,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         InlineKeyboardButton("📊 В портфолио", callback_data='profile')
                     ]])
                 )
-            else:
+        else:
             await query.edit_message_text(
                 "❌ Ты уже брал этот ЖК! Попробуй другой.",
                 reply_markup=InlineKeyboardMarkup([[
