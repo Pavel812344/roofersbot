@@ -324,7 +324,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await query.edit_message_text(message, reply_markup=reply_markup)
     
-        elif query.data == 'take_building':
+    elif query.data == 'take_building':
         # Пользователь берет ЖК
         if 'current_building' not in context.user_data:
             await query.edit_message_text("Произошла ошибка. Попробуй снова нажать 'Руфить!'")
