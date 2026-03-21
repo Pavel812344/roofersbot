@@ -270,6 +270,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    await query.edit_message_text("✅ Кнопка сработала!")
     
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
