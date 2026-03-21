@@ -267,11 +267,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Нажимай кнопку 'Руфить!' чтобы начать!",
         reply_markup=reply_markup
     )
-
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query 
+    query = update.callback_query
     await query.answer()
-    
+   
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
     
@@ -346,13 +345,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 # Все здания показаны
                 profile = get_user_profile(user.id)
-                await query.edit_message_text(
-                    f"✅ Ты взял {building['name']} и получил {building['points']} очков!\n\n"
-                    f"Ты просмотрел все доступные ЖК! Всего у тебя {profile['points']} очков.",
-                    reply_markup=InlineKeyboardMarkup([[
+                await query.edit_message_text()
+                f"✅ Ты взял {building['name']} и получил {building['points']} очков!\n\n"
+                f"Ты просмотрел все доступные ЖК! Всего у тебя {profile['points']} очков.",
+                reply_markup=InlineKeyboardMarkup([[
                         InlineKeyboardButton("📊 В портфолио", callback_data='profile')
                     ]])
-                )
+                
         else:
             await query.edit_message_text(
                 "❌ Ты уже брал этот ЖК! Попробуй другой.",
