@@ -5,7 +5,21 @@ from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram import InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+import asyncio
+from aiohttp import web
 import random
+
+async def healthcheck(request):
+    return web.Response(text="OK")
+
+async def start_webserver():
+    app = web.Application()
+    app.router.add_get('/', healthcheck)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 10000)
+    await site.start()
+    print("✅ Веб-сервер запущен на порту 10000")
 
 # Настройка логирования
 logging.basicConfig(
@@ -422,6 +436,9 @@ def main():
     # Регистрация обработчиков
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_handler))
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(start_webserver())
     
     # Запуск бота
     print("Бот запущен...")
