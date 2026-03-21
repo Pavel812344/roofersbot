@@ -399,6 +399,12 @@ async def show_building(query, context, user_id, edit=True):
         f"💰 Очки: {building['points']}\n\n"
         f"Прогресс: {current_index + 1}/{len(available_buildings)}"
     )
+
+    if edit:
+        await query.edit_message_text(message_text, reply_markup=reply_markup)
+    else:
+        await query.message.reply_text(message_text, reply_markup=reply_markup)
+        await query.message.delete()
     
     try:
         # Отправляем фото
