@@ -1,10 +1,9 @@
 import logging
 import os
-from os import name
 import sqlite3
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram._files.inputmedia import InputMediaPhoto
+from telegram import InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 import random
 
