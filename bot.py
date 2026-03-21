@@ -299,7 +299,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Показываем первый ЖК
         await show_building(query, context, user.id)
     
-        elif query.data == 'profile':
+    elif query.data == 'profile':
         profile = get_user_profile(user.id)
         if not profile:
             await query.edit_message_text("Профиль не найден. Начни игру с /start")
