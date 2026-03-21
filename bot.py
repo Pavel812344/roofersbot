@@ -344,22 +344,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 context.user_data['current_index'] = current_index + 1
                 await show_building(query, context, user.id, edit=False)
             else:
-                # Все здания показаны
-                profile = get_user_profile(user.id)
-                await query.edit_message_text()
-                f"✅ Ты взял {building['name']} и получил {building['points']} очков!\n\n"
-                f"Ты просмотрел все доступные ЖК! Всего у тебя {profile['points']} очков.",
-                reply_markup=InlineKeyboardMarkup([[
-                        InlineKeyboardButton("📊 В портфолио", callback_data='profile')
-                    ]])
-                
-        else:
-            await query.edit_message_text(
-                "❌ Ты уже брал этот ЖК! Попробуй другой.",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("🔄 Показать другой", callback_data='roof_action')
-                ]])
-            )
+    # Все здания показаны
+    profile = get_user_profile(user.id)
+    await query.edit_message_text(
+        f"✅ Ты взял {building['name']} и получил {building['points']} очков!\n\n"
+        f"Ты просмотрел все доступные ЖК! Всего у тебя {profile['points']} очков.",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("📊 В портфолио", callback_data='profile')
+        ]])
+    )
     
     elif query.data == 'next_building':
         # Пропускаем текущее здание
