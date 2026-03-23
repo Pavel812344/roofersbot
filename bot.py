@@ -357,6 +357,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup([[
                         InlineKeyboardButton("📊 В портфолио", callback_data='profile')
                     ]])
+                               )
                 
         else:
             await safe_edit(query,
