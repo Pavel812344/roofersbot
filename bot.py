@@ -9,6 +9,12 @@ import asyncio
 from aiohttp import web
 import random
 
+async def safe_edit(query, text, reply_markup=None):
+    try:
+        await query.edit_message_text(text, reply_markup=reply_markup)
+    except:
+        await query.message.reply_text(text, reply_markup=reply_markup)
+
 async def healthcheck(request):
     return web.Response(text="OK")
 
@@ -282,7 +288,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 available_buildings.append(bid)
         
         if not available_buildings:
-            await query.edit_message_text(
+            await safe_edit(query,
                 "Ты уже взял все доступные ЖК! Отличная работа! 👏\n\n"
                 "Следи за обновлениями - скоро добавятся новые!",
                 reply_markup=InlineKeyboardMarkup([[
@@ -301,7 +307,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'profile':
         profile = get_user_profile(user.id)
         if not profile:
-            await query.edit_message_text("Профиль не найден. Начни игру с /start")
+            await safe_edit(query, "Профиль не найден. Начни игру с /start")
             return
         
         # Формируем сообщение с профилем
@@ -321,12 +327,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [[InlineKeyboardButton("🏢 Продолжить руфить", callback_data='roof_action')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
-        await query.edit_message_text(message, reply_markup=reply_markup)
+        await safe_edit(query, message, reply_markup=reply_markup)
     
     elif query.data == 'take_building':
         # Пользователь берет ЖК
         if 'current_building' not in context.user_data:
-            await query.edit_message_text("Произошла ошибка. Попробуй снова нажать 'Руфить!'")
+            await safe_edit(query, "Произошла ошибка. Попробуй снова нажать 'Руфить!'")
             return
         
         building_id = context.user_data['current_building']
@@ -345,7 +351,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 # Все здания показаны
                 profile = get_user_profile(user.id)
-                await query.edit_message_text()
+                await safe_edit(query,
                 f"✅ Ты взял {building['name']} и получил {building['points']} очков!\n\n"
                 f"Ты просмотрел все доступные ЖК! Всего у тебя {profile['points']} очков.",
                 reply_markup=InlineKeyboardMarkup([[
@@ -353,7 +359,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ]])
                 
         else:
-            await query.edit_message_text(
+            await safe_edit(query,
                 "❌ Ты уже брал этот ЖК! Попробуй другой.",
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("🔄 Показать другой", callback_data='roof_action')
@@ -370,7 +376,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await show_building(query, context, user.id, edit=False)
         else:
             # Больше нет зданий для показа
-            await query.edit_message_text(
+            await safe_edit(query,
                 "Больше нет доступных ЖК для показа!",
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("📊 В портфолио", callback_data='profile')
@@ -401,7 +407,7 @@ async def show_building(query, context, user_id, edit=True):
     )
 
     if edit:
-        await query.edit_message_text(message_text, reply_markup=reply_markup)
+        await safe_edit(query, message_text, reply_markup=reply_markup)
     else:
         await query.message.reply_text(message_text, reply_markup=reply_markup)
         await query.message.delete()
@@ -424,7 +430,7 @@ async def show_building(query, context, user_id, edit=True):
     except FileNotFoundError:
         # Если фото не найдено, отправляем только текст
         if edit:
-            await query.edit_message_text(message_text, reply_markup=reply_markup)
+            await safe_edit(query, message_text, reply_markup=reply_markup)
         else:
             await query.message.reply_text(message_text, reply_markup=reply_markup)
             await query.message.delete()
