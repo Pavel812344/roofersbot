@@ -383,7 +383,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     InlineKeyboardButton("📊 В портфолио", callback_data='profile')
                 ]])
             )
-
 async def show_building(query, context, user_id, edit=True):
     """Показывает информацию о текущем ЖК"""
     available_buildings = context.user_data['available_buildings']
@@ -406,15 +405,9 @@ async def show_building(query, context, user_id, edit=True):
         f"💰 Очки: {building['points']}\n\n"
         f"Прогресс: {current_index + 1}/{len(available_buildings)}"
     )
-
-    if edit:
-        await safe_edit(query, message_text, reply_markup=reply_markup)
-    else:
-        await query.message.reply_text(message_text, reply_markup=reply_markup)
-        await query.message.delete()
     
     try:
-        # Отправляем фото
+        # Пытаемся отправить фото с подписью
         with open(building['photo_path'], 'rb') as photo:
             if edit:
                 await query.edit_message_media(
@@ -429,9 +422,16 @@ async def show_building(query, context, user_id, edit=True):
                 )
                 await query.message.delete()
     except FileNotFoundError:
-        # Если фото не найдено, отправляем только текст
+        # Если фото не найдено — отправляем только текст
         if edit:
-            await safe_edit(query, message_text, reply_markup=reply_markup)
+            await query.edit_message_text(message_text, reply_markup=reply_markup)
+        else:
+            await query.message.reply_text(message_text, reply_markup=reply_markup)
+            await query.message.delete()
+    except Exception:
+        # Если любая другая ошибка — тоже текст
+        if edit:
+            await query.edit_message_text(message_text, reply_markup=reply_markup)
         else:
             await query.message.reply_text(message_text, reply_markup=reply_markup)
             await query.message.delete()
