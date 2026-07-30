@@ -294,7 +294,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: b
     else:
         # Если вызвано через /start — отправляем новое сообщение
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-
 async def show_building(query, context, user_id, edit=True):
     available_buildings = context.user_data['available_buildings']
     current_index = context.user_data['current_index']
@@ -329,12 +328,12 @@ async def show_building(query, context, user_id, edit=True):
         else:
             await query.message.reply_text(message_text, reply_markup=reply_markup)
             await query.message.delete()
-
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
+    
     if query.data == 'roof_action':
         available_buildings = []
         for bid in buildings:
@@ -355,45 +354,47 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         text = f"📊 {profile['first_name']}\n💰 Очков: {profile['points']}\n🏆 Взято: {profile['conquered_count']}"
         keyboard = [
-    [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+            [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+            [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
         ]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    
     elif query.data == 'check_timer':
         profile = get_user_profile(user.id)
-    if profile['last_take_time']:
-        last_take = datetime.strptime(profile['last_take_time'], "%Y-%m-%d %H:%M:%S")
-        cooldown = get_cooldown_hours(profile['conquered_count'])
-        time_since = datetime.now() - last_take
-        if time_since < timedelta(hours=cooldown):
-            remaining = timedelta(hours=cooldown) - time_since
-            hours = int(remaining.total_seconds() // 3600)
-            minutes = int((remaining.total_seconds() % 3600) // 60)
-            keyboard = [
-                [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-            ]
-            await query.edit_message_text(
-                f"⏰ Осталось {hours} ч {minutes} мин",
-                reply_markup=InlineKeyboardMarkup(keyboard)
-            )
+        if profile['last_take_time']:
+            last_take = datetime.strptime(profile['last_take_time'], "%Y-%m-%d %H:%M:%S")
+            cooldown = get_cooldown_hours(profile['conquered_count'])
+            time_since = datetime.now() - last_take
+            if time_since < timedelta(hours=cooldown):
+                remaining = timedelta(hours=cooldown) - time_since
+                hours = int(remaining.total_seconds() // 3600)
+                minutes = int((remaining.total_seconds() % 3600) // 60)
+                keyboard = [
+                    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+                ]
+                await query.edit_message_text(
+                    f"⏰ Осталось {hours} ч {minutes} мин",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            else:
+                keyboard = [
+                    [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+                    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+                ]
+                await query.edit_message_text(
+                    "✅ Можно брать!",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
         else:
             keyboard = [
                 [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
                 [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
             ]
             await query.edit_message_text(
-                "✅ Можно брать!",
+                "✅ Можно брать первый ЖК!",
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
-    else:
-        keyboard = [
-            [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-            [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-        ]
-        await query.edit_message_text(
-            "✅ Можно брать первый ЖК!",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+    
     elif query.data == 'take_building':
         if 'current_building' not in context.user_data:
             return
@@ -409,7 +410,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.edit_message_text(msg)
         else:
             await query.edit_message_text(msg)
-
+    
     elif query.data == 'menu':
         await start(update, context, from_menu=True)
     
@@ -421,7 +422,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await show_building(query, context, user.id, edit=False)
         else:
             await query.edit_message_text("Больше нет ЖК")
-
 # ==================== ЗАПУСК ====================
 def main():
     if not os.path.exists('photos'):
