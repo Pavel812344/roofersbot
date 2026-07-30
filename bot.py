@@ -12,6 +12,11 @@ from aiohttp import web
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
+def add_menu_button(keyboard):
+    if isinstance(keyboard, list):
+        keyboard.append([InlineKeyboardButton("🏠 В меню", callback_data='menu')])
+    return keyboard
+
 # ==================== САМОПИНГ И ПЕРЕЗАПУСК ====================
 def restart_bot():
     print("⚠️ Бот завис, принудительное завершение...")
@@ -54,7 +59,7 @@ async def start_webserver():
 
 # ==================== 100+ ЖК ====================
 buildings = {
-    # Москва-Сити (20 очков)
+    # ========== МОСКВА-СИТИ (20 очков) ==========
     'neva_towers': {'name': 'Neva Towers', 'complex': 'Москва-Сити', 'points': 20, 'photo_path': 'photos/neva_towers.jpg'},
     'federation': {'name': 'Башня Федерация', 'complex': 'Москва-Сити', 'points': 20, 'photo_path': 'photos/federation.jpg'},
     'okyo': {'name': 'ЖК Око', 'complex': 'Москва-Сити', 'points': 20, 'photo_path': 'photos/okyo.jpg'},
@@ -62,18 +67,66 @@ buildings = {
     'capital_city': {'name': 'Город Столиц', 'complex': 'Москва-Сити', 'points': 20, 'photo_path': 'photos/capital_city.jpg'},
     'evolution': {'name': 'Башня Эволюция', 'complex': 'Москва-Сити', 'points': 20, 'photo_path': 'photos/evolution.jpg'},
     'imperia': {'name': 'Башня Империя', 'complex': 'Москва-Сити', 'points': 20, 'photo_path': 'photos/imperia.jpg'},
-    # ... (остальные ЖК из предыдущей версии)
+
+    # ========== МОСКВА (10 очков) ==========
+    'filigrad': {'name': 'Фили Град', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/filigrad.jpg'},
+    'setun_city': {'name': 'Сетунь Сити', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/setun_city.jpg'},
+    'luchi': {'name': 'Лучи', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/luchi.jpg'},
+    'simvol': {'name': 'Символ', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/simvol.jpg'},
+    'sportkvartal': {'name': 'Спортивный квартал', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/sportkvartal.jpg'},
+    'parkrublevo': {'name': 'Парк Рублёво', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/parkrublevo.jpg'},
+    'myakinino': {'name': 'Резиденция Мякинино', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/myakinino.jpg'},
+    'parkcity': {'name': 'Парк Сити', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/parkcity.jpg'},
+    'mosfilm': {'name': 'Мосфильмовский', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/mosfilm.jpg'},
+    'begovoy': {'name': 'Дом на Беговой', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/begovoy.jpg'},
+    'frunzenskaya': {'name': 'Дом на Фрунзенской', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/frunzenskaya.jpg'},
+    'beregovoy': {'name': 'Береговой', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/beregovoy.jpg'},
+    'naberezhny': {'name': 'Набережный квартал', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/naberezhny.jpg'},
+    'parkpobedy': {'name': 'Парк Победы', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/parkpobedy.jpg'},
+    'smolensky': {'name': 'Смоленский пассаж', 'complex': 'Москва', 'points': 10, 'photo_path': 'photos/smolensky.jpg'},
+
+    # ========== САНКТ-ПЕТЕРБУРГ (10 очков) ==========
+    'evropacity': {'name': 'Европа Сити', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/evropacity.jpg'},
+    'okhtamoll': {'name': 'Охта Молл', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/okhtamoll.jpg'},
+    'nevskaya': {'name': 'Невская ратуша', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/nevskaya.jpg'},
+    'primorsky': {'name': 'Приморский', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/primorsky.jpg'},
+    'graf_orlov': {'name': 'Граф Орлов', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/graf_orlov.jpg'},
+    'imperial': {'name': 'Империал', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/imperial.jpg'},
+    'senator': {'name': 'Сенатор', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/senator.jpg'},
+    'monblan': {'name': 'Резиденция Монблан', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/monblan.jpg'},
+    'sever_dolina': {'name': 'Северная долина', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/sever_dolina.jpg'},
+    'tsarskaya': {'name': 'Царская столица', 'complex': 'Санкт-Петербург', 'points': 10, 'photo_path': 'photos/tsarskaya.jpg'},
+
+    # ========== ЕКАТЕРИНБУРГ (10 очков) ==========
+    'vysotsky_ekb': {'name': 'Высоцкий', 'complex': 'Екатеринбург', 'points': 10, 'photo_path': 'photos/vysotsky_ekb.jpg'},
+    'iset_tower': {'name': 'Isеt Tower', 'complex': 'Екатеринбург', 'points': 10, 'photo_path': 'photos/iset_tower.jpg'},
+    'belinskogo': {'name': 'Квартал на Белинского', 'complex': 'Екатеринбург', 'points': 10, 'photo_path': 'photos/belinskogo.jpg'},
+    'malysheva': {'name': 'Квартал на Малышева', 'complex': 'Екатеринбург', 'points': 10, 'photo_path': 'photos/malysheva.jpg'},
+
+    # ========== КАЗАНЬ (10 очков) ==========
+    'lazurnye_neba': {'name': 'Лазурные небеса', 'complex': 'Казань', 'points': 10, 'photo_path': 'photos/lazurnye_neba.jpg'},
+    'kazan_river': {'name': 'Казань Ривер', 'complex': 'Казань', 'points': 10, 'photo_path': 'photos/kazan_river.jpg'},
+    'izumrud': {'name': 'Изумрудный город', 'complex': 'Казань', 'points': 10, 'photo_path': 'photos/izumrud.jpg'},
+    'serebryany': {'name': 'Серебряный бор', 'complex': 'Казань', 'points': 10, 'photo_path': 'photos/serebryany.jpg'},
+    'kremlin_quart': {'name': 'Кремлёвский квартал', 'complex': 'Казань', 'points': 10, 'photo_path': 'photos/kremlin_quart.jpg'},
+
+    # ========== НОВОСИБИРСК (10 очков) ==========
+    'atlantic_city': {'name': 'Атлантик Сити', 'complex': 'Новосибирск', 'points': 10, 'photo_path': 'photos/atlantic_city.jpg'},
+    'krasnaya_gorka': {'name': 'Красная горка', 'complex': 'Новосибирск', 'points': 10, 'photo_path': 'photos/krasnaya_gorka.jpg'},
+    'zolotaya_niva': {'name': 'Золотая Нива', 'complex': 'Новосибирск', 'points': 10, 'photo_path': 'photos/zolotaya_niva.jpg'},
+    'akadem': {'name': 'Академгородок', 'complex': 'Новосибирск', 'points': 10, 'photo_path': 'photos/akadem.jpg'},
+    'rechnoy': {'name': 'Речной вокзал', 'complex': 'Новосибирск', 'points': 10, 'photo_path': 'photos/rechnoy.jpg'},
+
+    # ========== КРАСНОДАР (10 очков) ==========
+    'krasnodar_city': {'name': 'Краснодар Сити', 'complex': 'Краснодар', 'points': 10, 'photo_path': 'photos/krasnodar_city.jpg'},
+
+    # ========== СОЧИ (10 очков) ==========
+    'sochi_park': {'name': 'Сочи Парк', 'complex': 'Сочи', 'points': 10, 'photo_path': 'photos/sochi_park.jpg'},
+
+    # ========== РОСТОВ-НА-ДОНУ (10 очков) ==========
+    'rostov_arena': {'name': 'Ростов Арена', 'complex': 'Ростов-на-Дону', 'points': 10, 'photo_path': 'photos/rostov_arena.jpg'},
+    'rostov_city': {'name': 'Ростов Сити', 'complex': 'Ростов-на-Дону', 'points': 10, 'photo_path': 'photos/rostov_city.jpg'},
 }
-
-# Добавляем до 100+ ЖК
-for i in range(1, 81):
-    buildings[f'building_{i}'] = {
-        'name': f'ЖК "Столичный {i}"',
-        'complex': f'Город {random.choice(["Москва", "СПб", "Казань", "Екатеринбург", "Новосибирск", "Краснодар", "Сочи", "Ростов-на-Дону"])}',
-        'points': 10,
-        'photo_path': f'photos/building_{i}.jpg'
-    }
-
 # ==================== КУЛДАУН И ПРИМ ====================
 def get_cooldown_hours(conquered_count):
     if conquered_count < 5: return 1.5
@@ -247,7 +300,9 @@ async def show_building(query, context, user_id, edit=True):
         [InlineKeyboardButton("✅ Взять ЖК", callback_data='take_building')],
         [InlineKeyboardButton("⏭ Пропустить", callback_data='next_building')],
         [InlineKeyboardButton("📊 Портфолио", callback_data='profile')]
+        [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
     ]
+    keyboard = add_menu_button(keyboard)
     reply_markup = InlineKeyboardMarkup(keyboard)
     prim_chance = "70%" if is_moscow_city(building['complex']) else "30%"
     message_text = (
@@ -276,7 +331,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
-    
     if query.data == 'roof_action':
         available_buildings = []
         for bid in buildings:
@@ -296,7 +350,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not profile:
             return
         text = f"📊 {profile['first_name']}\n💰 Очков: {profile['points']}\n🏆 Взято: {profile['conquered_count']}"
-        await query.edit_message_text(text)
+        keyboard = [
+    [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+        ]
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
     
     elif query.data == 'check_timer':
         profile = get_user_profile(user.id)
@@ -308,11 +366,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 remaining = timedelta(hours=cooldown) - time_since
                 hours = int(remaining.total_seconds() // 3600)
                 minutes = int((remaining.total_seconds() % 3600) // 60)
-                await query.edit_message_text(f"⏰ Осталось {hours} ч {minutes} мин")
+                keyboard = [
+    [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+                ]
+                await query.edit_message_text(f"⏰ Осталось {hours} ч {minutes} мин", reply_markup=InlineKeyboardMarkup(keyboard))
             else:
                 await query.edit_message_text("✅ Можно брать")
-        else:
-            await query.edit_message_text("✅ Можно брать")
     
     elif query.data == 'take_building':
         if 'current_building' not in context.user_data:
@@ -329,6 +389,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.edit_message_text(msg)
         else:
             await query.edit_message_text(msg)
+
+    elif query.data == 'menu':
+    await start(update, context)
     
     elif query.data == 'next_building':
         available = context.user_data.get('available_buildings', [])
