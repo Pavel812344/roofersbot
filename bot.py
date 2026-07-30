@@ -361,7 +361,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
     
     elif query.data == 'check_timer':
-    profile = get_user_profile(user.id)
+        profile = get_user_profile(user.id)
     if profile['last_take_time']:
         last_take = datetime.strptime(profile['last_take_time'], "%Y-%m-%d %H:%M:%S")
         cooldown = get_cooldown_hours(profile['conquered_count'])
