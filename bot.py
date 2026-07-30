@@ -359,7 +359,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
         ]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-    
     elif query.data == 'check_timer':
         profile = get_user_profile(user.id)
     if profile['last_take_time']:
@@ -395,7 +394,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "✅ Можно брать первый ЖК!",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
-    
     elif query.data == 'take_building':
         if 'current_building' not in context.user_data:
             return
