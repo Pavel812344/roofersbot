@@ -397,7 +397,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'take_building':
         if 'current_building' not in context.user_data:
             return
-    building_id = context.user_data['current_building']
+            building_id = context.user_data['current_building']
     success, msg, prim = take_building(user.id, building_id)
     
     keyboard = [
