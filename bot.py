@@ -294,46 +294,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: b
     else:
         # Если вызвано через /start — отправляем новое сообщение
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-async def show_building(query, context, user_id, edit=True):
-    available_buildings = context.user_data['available_buildings']
-    current_index = context.user_data['current_index']
-    building_id = available_buildings[current_index]
-    building = buildings[building_id]
-    context.user_data['current_building'] = building_id
-    keyboard = [
-        [InlineKeyboardButton("✅ Взять ЖК", callback_data='take_building')],
-        [InlineKeyboardButton("⏭ Пропустить", callback_data='next_building')],
-        [InlineKeyboardButton("📊 Портфолио", callback_data='profile')],
-        [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    prim_chance = "70%" if is_moscow_city(building['complex']) else "30%"
-    message_text = (
-        f"🏢 {building['name']}\n"
-        f"📍 Комплекс: {building['complex']}\n"
-        f"💰 Очки: {building['points']}\n"
-        f"⚠️ Шанс быть принятым: {prim_chance}\n\n"
-        f"Прогресс: {current_index + 1}/{len(available_buildings)}"
-    )
-    try:
-        with open(building['photo_path'], 'rb') as photo:
-            if edit:
-                await query.edit_message_media(media=InputMediaPhoto(photo, caption=message_text), reply_markup=reply_markup)
-            else:
-                await query.message.reply_photo(photo=photo, caption=message_text, reply_markup=reply_markup)
-                await query.message.delete()
-    except:
-        if edit:
-            await query.edit_message_text(message_text, reply_markup=reply_markup)
-        else:
-            await query.message.reply_text(message_text, reply_markup=reply_markup)
-            await query.message.delete()
+        
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
-    
+
     if query.data == 'roof_action':
         available_buildings = []
         for bid in buildings:
@@ -341,13 +308,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if can_take:
                 available_buildings.append(bid)
         if not available_buildings:
-            await query.edit_message_text("⏰ Нет доступных ЖК. Проверь таймер.")
+            keyboard = [
+                [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+            ]
+            await query.edit_message_text(
+                "⏰ Нет доступных ЖК. Проверь таймер.",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
             return
         random.shuffle(available_buildings)
         context.user_data['available_buildings'] = available_buildings
         context.user_data['current_index'] = 0
         await show_building(query, context, user.id)
-    
+
     elif query.data == 'profile':
         profile = get_user_profile(user.id)
         if not profile:
@@ -358,7 +331,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
         ]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-    
+
     elif query.data == 'check_timer':
         profile = get_user_profile(user.id)
         if profile['last_take_time']:
@@ -385,39 +358,30 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "✅ Можно брать!",
                     reply_markup=InlineKeyboardMarkup(keyboard)
                 )
-        else:
-            keyboard = [
-                [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-                [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-            ]
-            await query.edit_message_text(
-                "✅ Можно брать первый ЖК!",
-                reply_markup=InlineKeyboardMarkup(keyboard)
-            )
+
     elif query.data == 'take_building':
         if 'current_building' not in context.user_data:
             return
-            building_id = context.user_data['current_building']
-    success, msg, prim = take_building(user.id, building_id)
-    
-    keyboard = [
-        [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-        [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    if success:
-        available = context.user_data.get('available_buildings', [])
-        idx = context.user_data.get('current_index', 0)
-        if idx + 1 < len(available):
-            context.user_data['current_index'] = idx + 1
-            await show_building(query, context, user.id, edit=False)
-        else:
-            await query.edit_message_text(msg, reply_markup=reply_markup)
-    
+        building_id = context.user_data['current_building']
+        success, msg, prim = take_building(user.id, building_id)
+
+        keyboard = [
+            [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        if success:
+            available = context.user_data.get('available_buildings', [])
+            idx = context.user_data.get('current_index', 0)
+            if idx + 1 < len(available):
+                context.user_data['current_index'] = idx + 1
+                await show_building(query, context, user.id, edit=False)
+            else:
+                await query.edit_message_text(msg, reply_markup=reply_markup)
+
     elif query.data == 'menu':
         await start(update, context, from_menu=True)
-    
+
     elif query.data == 'next_building':
         available = context.user_data.get('available_buildings', [])
         idx = context.user_data.get('current_index', 0)
@@ -425,7 +389,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data['current_index'] = idx + 1
             await show_building(query, context, user.id, edit=False)
         else:
-            await query.edit_message_text("Больше нет ЖК")
+            keyboard = [
+                [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+                [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+            ]
+            await query.edit_message_text(
+                "Больше нет ЖК",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+
 # ==================== ЗАПУСК ====================
 def main():
     if not os.path.exists('photos'):
