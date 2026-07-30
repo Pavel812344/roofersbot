@@ -273,7 +273,7 @@ def create_buildings_table():
     conn.close()
 
 # ==================== ОБРАБОТЧИКИ ====================
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: bool = False):
     user = update.effective_user
     register_user(user.id, user.username, user.first_name)
     keyboard = [
@@ -281,15 +281,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📊 Портфолио", callback_data='profile')],
         [InlineKeyboardButton("⏰ Проверить таймер", callback_data='check_timer')]
     ]
-    await update.message.reply_text(
+    text = (
         f"Привет, {user.first_name}! Добро пожаловать в игру Руфер!\n\n"
         "⚠️ Важно: при попытке взять ЖК есть шанс, что тебя 'примут':\n"
         "• Обычные ЖК - 30%\n"
         "• Москва-Сити - 70%\n\n"
-        "⏰ Кулдаун: 1.5–6 часов",
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        "⏰ Кулдаун: 1.5–6 часов"
     )
-    
     if from_menu:
         # Если вызвано из меню — редактируем текущее сообщение
         await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
