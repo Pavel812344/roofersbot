@@ -391,7 +391,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(msg)
 
     elif query.data == 'menu':
-    await start(update, context)
+        await start(update, context)
     
     elif query.data == 'next_building':
         available = context.user_data.get('available_buildings', [])
