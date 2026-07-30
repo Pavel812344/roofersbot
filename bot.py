@@ -394,10 +394,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "✅ Можно брать первый ЖК!",
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
-    
     elif query.data == 'take_building':
-    if 'current_building' not in context.user_data:
-        return
+        if 'current_building' not in context.user_data:
+            return
     building_id = context.user_data['current_building']
     success, msg, prim = take_building(user.id, building_id)
     
@@ -413,8 +412,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if idx + 1 < len(available):
             context.user_data['current_index'] = idx + 1
             await show_building(query, context, user.id, edit=False)
-        else:
-            await query.edit_message_text(msg, reply_markup=reply_markup)
         else:
             await query.edit_message_text(msg, reply_markup=reply_markup)
     
