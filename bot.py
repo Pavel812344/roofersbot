@@ -289,6 +289,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "⏰ Кулдаун: 1.5–6 часов",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
+    
+    if from_menu:
+        # Если вызвано из меню — редактируем текущее сообщение
+        await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    else:
+        # Если вызвано через /start — отправляем новое сообщение
+        await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def show_building(query, context, user_id, edit=True):
     available_buildings = context.user_data['available_buildings']
@@ -390,7 +397,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(msg)
 
     elif query.data == 'menu':
-        await start(update, context)
+        await start(update, context, from_menu=True)
     
     elif query.data == 'next_building':
         available = context.user_data.get('available_buildings', [])
