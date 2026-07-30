@@ -299,10 +299,9 @@ async def show_building(query, context, user_id, edit=True):
     keyboard = [
         [InlineKeyboardButton("✅ Взять ЖК", callback_data='take_building')],
         [InlineKeyboardButton("⏭ Пропустить", callback_data='next_building')],
-        [InlineKeyboardButton("📊 Портфолио", callback_data='profile')]
+        [InlineKeyboardButton("📊 Портфолио", callback_data='profile')],
         [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
     ]
-    keyboard = add_menu_button(keyboard)
     reply_markup = InlineKeyboardMarkup(keyboard)
     prim_chance = "70%" if is_moscow_city(building['complex']) else "30%"
     message_text = (
