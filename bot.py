@@ -390,20 +390,27 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 
     elif query.data == 'take_building':
-        if 'current_building' not in context.user_data:
-            return
-        building_id = context.user_data['current_building']
-        success, msg, prim = take_building(user.id, building_id)
+        try:
+            if 'current_building' not in context.user_data:
+                await query.answer("Ошибка: ЖК не выбран", show_alert=True)
+                return
+            building_id = context.user_data['current_building']
+            success, msg, prim = take_building(user.id, building_id)
 
-        keyboard = [
-            [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-            [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        if success:
-            await query.edit_message_text(msg, reply_markup=reply_markup)
-        else:
-            await query.edit_message_text(msg, reply_markup=reply_markup)
+            keyboard = [
+                [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+                [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            if success:
+                await query.edit_message_text(msg, reply_markup=reply_markup)
+            else:
+                await query.edit_message_text(msg, reply_markup=reply_markup)
+        except Exception as e:
+            await query.edit_message_text(f"❌ Ошибка: {e}")
+            print(f"take_building error: {e}")
+    
     
     elif query.data == 'menu':
         await start(update, context, from_menu=True)
