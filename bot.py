@@ -319,8 +319,7 @@ async def show_building(query, context, user_id, edit=True):
         f"🏢 {building['name']}\n"
         f"📍 Комплекс: {building['complex']}\n"
         f"💰 Очки: {building['points']}\n"
-        f"⚠️ Шанс быть принятым: {prim_chance}\n\n"
-        f"Прогресс: {current_index + 1}/{len(available_buildings)}"
+        f"⚠️ Шанс быть принятым: {prim_chance}\n"
     )
     try:
         with open(building['photo_path'], 'rb') as photo:
