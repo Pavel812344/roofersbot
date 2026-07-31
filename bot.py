@@ -225,6 +225,7 @@ def take_building(user_id, building_id):
     building = buildings[building_id]
     conn = sqlite3.connect('roofer_game.db')
     c = conn.cursor()
+    
     c.execute("SELECT last_take_time FROM users WHERE user_id = ?", (user_id,))
     result = c.fetchone()
     if result and result[0]:
@@ -238,10 +239,20 @@ def take_building(user_id, building_id):
             minutes = int((remaining.total_seconds() % 3600) // 60)
             conn.close()
             return False, f"Нужно подождать ещё {hours} ч {minutes} мин до следующего взятия!", False
+            
     prim_active = check_prim(building)
     if prim_active:
+    # Ставим КД даже после прима
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        c.execute("UPDATE users SET last_take_time = ? WHERE user_id = ?", (current_time, user_id))
+        conn.commit()
         conn.close()
-        return False, f"⚠️ Ты не смог заруфать жк {building['name']} и тебя приняли!", True
+    
+    # Определяем следующий кд
+        profile = get_user_profile(user_id)
+        next_cooldown = get_cooldown_hours(profile['conquered_count'])
+    
+        return False, f"⚠️ Ты не смог заруфать жк {building['name']} и тебя приняли! КД активирован. Следующая попытка через {next_cooldown} ч.", True
     points = building['points']
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     c.execute("INSERT INTO conquered_buildings (user_id, building_id, conquered_date, points_earned) VALUES (?, ?, ?, ?)",
