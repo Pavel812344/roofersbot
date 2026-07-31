@@ -391,9 +391,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data == 'take_building':
         if 'current_building' not in context.user_data:
-        return
-    building_id = context.user_data['current_building']
-    success, msg, prim = take_building(user.id, building_id)
+            return
+            building_id = context.user_data['current_building']
+            success, msg, prim = take_building(user.id, building_id)
 
     keyboard = [
         [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
@@ -404,7 +404,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if success:
             await query.edit_message_text(msg, reply_markup=reply_markup)
         else:
-        # Ошибка (кулдаун, прим) — показываем сообщение
             await query.edit_message_text(msg, reply_markup=reply_markup)
 
     elif query.data == 'menu':
