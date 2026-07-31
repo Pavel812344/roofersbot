@@ -400,10 +400,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-        if success:
-            await query.edit_message_text(msg, reply_markup=reply_markup)
-        else:
-            await query.edit_message_text(msg, reply_markup=reply_markup)
+    if success:
+        await query.edit_message_text(msg, reply_markup=reply_markup)
+    else:
+        await query.edit_message_text(msg, reply_markup=reply_markup)
     
     elif query.data == 'menu':
         await start(update, context, from_menu=True)
