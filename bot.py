@@ -282,9 +282,6 @@ def create_buildings_table():
 # ==================== ОБРАБОТЧИКИ ====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: bool = False):
     try:
-        if update.message and update.message.text == '/start':
-            await update.message.reply_text("✅ start сработал")
-            return
         user = update.effective_user
         register_user(user.id, user.username, user.first_name)
         keyboard = [
