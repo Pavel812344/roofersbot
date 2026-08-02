@@ -252,7 +252,7 @@ def take_building(user_id, building_id):
         profile = get_user_profile(user_id)
         next_cooldown = get_cooldown_hours(profile['conquered_count'])
     
-        return False, f"⚠️ Ты не смог заруфать жк {building['name']} и тебя приняли! КД активирован. Следующая попытка через {next_cooldown} ч.", True
+        return False, f"⚠️ Ты не смог заруфать жк {building['name']} и тебя приняли! Следующая попытка через {next_cooldown} ч.", True
     points = building['points']
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     c.execute("INSERT INTO conquered_buildings (user_id, building_id, conquered_date, points_earned) VALUES (?, ?, ?, ?)",
@@ -296,10 +296,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: b
         "⏰ Кулдаун: 1.5–6 часов"
     )
     if from_menu:
-        # Если вызвано из меню — редактируем текущее сообщение
-        await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-    else:
-        # Если вызвано через /start — отправляем новое сообщение
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def show_building(query, context, user_id, edit=True):
@@ -327,13 +323,8 @@ async def show_building(query, context, user_id, edit=True):
                 await query.edit_message_media(media=InputMediaPhoto(photo, caption=message_text), reply_markup=reply_markup)
             else:
                 await query.message.reply_photo(photo=photo, caption=message_text, reply_markup=reply_markup)
-                await query.message.delete()
-    except:
-        if edit:
-            await query.edit_message_text(message_text, reply_markup=reply_markup)
-        else:
-            await query.message.reply_text(message_text, reply_markup=reply_markup)
-            await query.message.delete()
+                except:
+                    await query.message.reply_text(message_text, reply_markup=reply_markup)
         
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -412,15 +403,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-
-            if success:
-                await query.edit_message_text(msg, reply_markup=reply_markup)
-            else:
-                await query.edit_message_text(msg, reply_markup=reply_markup)
-        except Exception as e:
-            await query.edit_message_text(f"❌ Ошибка: {e}")
-            print(f"take_building error: {e}")
-    
+        try:
+            await query.edit_message_text(msg, reply_markup=reply_markup)
+        except:
+            await query.message.reply_text(msg, reply_markup=reply_markup)
+            await query.message.delete()
     
     elif query.data == 'menu':
         await start(update, context, from_menu=True)
