@@ -323,8 +323,8 @@ async def show_building(query, context, user_id, edit=True):
                 await query.edit_message_media(media=InputMediaPhoto(photo, caption=message_text), reply_markup=reply_markup)
             else:
                 await query.message.reply_photo(photo=photo, caption=message_text, reply_markup=reply_markup)
-                except:
-                    await query.message.reply_text(message_text, reply_markup=reply_markup)
+    except:
+        await query.message.reply_text(message_text, reply_markup=reply_markup)
         
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
