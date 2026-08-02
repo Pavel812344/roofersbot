@@ -296,8 +296,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: b
         "⏰ Кулдаун: 1.5–6 часов"
     )
     if from_menu:
-        await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-
+        try:
+            await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+        except:
+            await update.callback_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+            await update.callback_query.message.delete()
 async def show_building(query, context, user_id, edit=True):
     available_buildings = context.user_data['available_buildings']
     current_index = context.user_data['current_index']
