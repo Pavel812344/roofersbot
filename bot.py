@@ -281,26 +281,32 @@ def create_buildings_table():
 
 # ==================== ОБРАБОТЧИКИ ====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: bool = False):
-    user = update.effective_user
-    register_user(user.id, user.username, user.first_name)
-    keyboard = [
-        [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-        [InlineKeyboardButton("📊 Портфолио", callback_data='profile')],
-        [InlineKeyboardButton("⏰ Проверить таймер", callback_data='check_timer')]
-    ]
-    text = (
-        f"Привет, {user.first_name}! Добро пожаловать в игру Руфер!\n\n"
-        "⚠️ Важно: при попытке взять ЖК есть шанс, что тебя 'примут':\n"
-        "• Обычные ЖК - 30%\n"
-        "• Москва-Сити - 70%\n\n"
-        "⏰ Кулдаун: 1.5–6 часов"
-    )
-    if from_menu:
-        try:
-            await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-        except:
-            await update.callback_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-            await update.callback_query.message.delete()
+    try:
+        user = update.effective_user
+        register_user(user.id, user.username, user.first_name)
+        keyboard = [
+            [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+            [InlineKeyboardButton("📊 Портфолио", callback_data='profile')],
+            [InlineKeyboardButton("⏰ Проверить таймер", callback_data='check_timer')]
+        ]
+        text = (
+            f"Привет, {user.first_name}! Добро пожаловать в игру Руфер!\n\n"
+            "⚠️ Важно: при попытке взять ЖК есть шанс, что тебя 'примут':\n"
+            "• Обычные ЖК - 30%\n"
+            "• Москва-Сити - 70%\n\n"
+            "⏰ Кулдаун: 1.5–6 часов"
+        )
+        if from_menu:
+            try:
+                await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+            except:
+                await update.callback_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+                await update.callback_query.message.delete()
+        else:
+            await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    except Exception as e:
+        print(f"❌ start error: {e}")
+        
 async def show_building(query, context, user_id, edit=True):
     available_buildings = context.user_data['available_buildings']
     current_index = context.user_data['current_index']
