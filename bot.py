@@ -428,8 +428,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup = InlineKeyboardMarkup(keyboard)
         else:
             reply_markup = None
-        
-        await query.edit_message_text(msg, reply_markup=reply_markup)
+            
+        try:
+            await query.edit_message_text(msg, reply_markup=reply_markup)
+        except:
+            await query.message.reply_text(msg, reply_markup=reply_markup)
+            await query.message.delete()
 
     elif query.data == 'next_building':
         # Генерируем новый случайный ЖК
