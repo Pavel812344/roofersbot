@@ -376,28 +376,30 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(user.id, user.username, user.first_name)
     
     if query.data == 'roof_action':
-        available_buildings = []
-        for bid in buildings:
-            can_take, _ = can_take_building(user.id, bid)
-            if can_take:
-                available_buildings.append(bid)
-        if not available_buildings:
-            keyboard = [
-                [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-            ]
-            if update.effective_chat.type == 'private':
-                reply_markup = InlineKeyboardMarkup(keyboard)
-            else:
-                reply_markup = None
+    # Если ещё нет доступных ЖК — генерируем
+        if 'available_buildings' not in context.user_data or not context.user_data['available_buildings']:
+            available_buildings = []
+            for bid in buildings:
+                can_take, _ = can_take_building(user.id, bid)
+                if can_take:
+                    available_buildings.append(bid)
+            if not available_buildings:
+                keyboard = [
+                    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+                ]
+                if update.effective_chat.type == 'private':
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                else:
+                    reply_markup = None
         
-            await query.edit_message_text(
-                "⏰ Нет доступных ЖК. Проверь таймер.",
-                reply_markup=reply_markup
-            )
-            return
-        random.shuffle(available_buildings)
-        context.user_data['available_buildings'] = available_buildings
-        context.user_data['current_index'] = 0
+                await query.edit_message_text(
+                    "⏰ Нет доступных ЖК. Проверь таймер.",
+                    reply_markup=reply_markup
+                )
+                return
+            random.shuffle(available_buildings)
+            context.user_data['available_buildings'] = available_buildings
+            context.user_data['current_index'] = 0
         await show_building(query, context, user.id)
 
     elif query.data == 'profile':
