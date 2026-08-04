@@ -394,8 +394,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             cooldown_hours = get_cooldown_hours(profile['conquered_count'])
             time_since = datetime.now() - last_take
             if time_since < timedelta(hours=cooldown_hours):
-                await query.edit_message_text("⏰ Ты на КД! Проверь таймер.")
+                keyboard = [
+                    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+                ]
+                if update.effective_chat.type == 'private':
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                else:
+                    reply_markup = None
+                await query.edit_message_text(
+                    "⏰ Проверь таймер.",
+                    reply_markup=reply_markup
+                )
                 return
+    
+    # Если КД нет — показываем ЖК
+    building_id = random.choice(list(buildings.keys()))
+    context.user_data['current_building'] = building_id
+    await show_building(query, context, user.id)
     
     # Если КД нет — показываем ЖК
         building_id = random.choice(list(buildings.keys()))
