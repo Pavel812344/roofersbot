@@ -377,97 +377,85 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
-    
-    
+
     if query.data == 'roof_action':
-    # Генерируем случайный ЖК
+        # Берём случайный ЖК
         building_id = random.choice(list(buildings.keys()))
         context.user_data['current_building'] = building_id
         await show_building(query, context, user.id)
-    
+
+    elif query.data == 'take_building':
+        if 'current_building' not in context.user_data:
+            await query.edit_message_text("❌ Сначала выбери ЖК через /roof")
+            return
+        
+        building_id = context.user_data['current_building']
+        success, msg, prim = take_building(user.id, building_id)
+        
+        keyboard = [
+            [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+            [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+        ]
+        if update.effective_chat.type == 'private':
+            reply_markup = InlineKeyboardMarkup(keyboard)
+        else:
+            reply_markup = None
+        
+        await query.edit_message_text(msg, reply_markup=reply_markup)
+
+    elif query.data == 'next_building':
+        # Генерируем новый случайный ЖК
+        building_id = random.choice(list(buildings.keys()))
+        context.user_data['current_building'] = building_id
+        await show_building(query, context, user.id)
+
     elif query.data == 'profile':
         profile = get_user_profile(user.id)
         if not profile:
+            await query.edit_message_text("❌ Профиль не найден")
             return
         text = f"📊 {profile['first_name']}\n💰 Очков: {profile['points']}\n🏆 Взято: {profile['conquered_count']}"
         keyboard = [
             [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
             [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
         ]
-
         if update.effective_chat.type == 'private':
             reply_markup = InlineKeyboardMarkup(keyboard)
         else:
             reply_markup = None
-            
         await query.edit_message_text(text, reply_markup=reply_markup)
 
     elif query.data == 'check_timer':
         profile = get_user_profile(user.id)
-        if profile['last_take_time']:
-            last_take = datetime.strptime(profile['last_take_time'], "%Y-%m-%d %H:%M:%S")
-            cooldown = get_cooldown_hours(profile['conquered_count'])
-            time_since = datetime.now() - last_take
-            if time_since < timedelta(hours=cooldown):
-                remaining = timedelta(hours=cooldown) - time_since
-                hours = int(remaining.total_seconds() // 3600)
-                minutes = int((remaining.total_seconds() % 3600) // 60)
-                keyboard = [
-                    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-                ]
-                if update.effective_chat.type == 'private':
-                    reply_markup = InlineKeyboardMarkup(keyboard)
-                else:
-                    reply_markup = None
-                await query.edit_message_text(
-                    f"⏰ Осталось {hours} ч {minutes} мин",
-                    reply_markup=reply_markup
-                )
-            else:
-                keyboard = [
-                    [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-                    [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-                ]
-                if update.effective_chat.type == 'private':
-                    reply_markup = InlineKeyboardMarkup(keyboard)
-                else:
-                    reply_markup = None
-                    
-                await query.edit_message_text(
-                    "✅ Можно брать!",
-                    reply_markup=reply_markup
-                )
-                
-    elif query.data == 'take_building':
-        try:
-            if 'current_building' not in context.user_data:
-                await query.answer("Ошибка: ЖК не выбран", show_alert=True)
-                return
-            building_id = context.user_data['current_building']
-            success, msg, prim = take_building(user.id, building_id)
+        if not profile or not profile['last_take_time']:
+            await query.edit_message_text("✅ Кулдаун отсутствует. Можно брать ЖК!")
+            return
+        
+        last_take = datetime.strptime(profile['last_take_time'], "%Y-%m-%d %H:%M:%S")
+        cooldown_hours = get_cooldown_hours(profile['conquered_count'])
+        time_since = datetime.now() - last_take
+        
+        if time_since < timedelta(hours=cooldown_hours):
+            remaining = timedelta(hours=cooldown_hours) - time_since
+            hours = int(remaining.total_seconds() // 3600)
+            minutes = int((remaining.total_seconds() % 3600) // 60)
+            text = f"⏰ Осталось {hours} ч {minutes} мин"
+        else:
+            text = "✅ Кулдаун прошёл! Можно брать ЖК."
+        
+        keyboard = [
+            [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
+            [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
+        ]
+        if update.effective_chat.type == 'private':
+            reply_markup = InlineKeyboardMarkup(keyboard)
+        else:
+            reply_markup = None
+        await query.edit_message_text(text, reply_markup=reply_markup)
 
-            keyboard = [
-                [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-                [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-            ]
-            if update.effective_chat.type == 'private':
-                reply_markup = InlineKeyboardMarkup(keyboard)
-            else:
-                reply_markup = None
-            
-            await query.edit_message_text(msg, reply_markup=reply_markup)
-        except:
-            await query.message.reply_text(msg, reply_markup=reply_markup)
-            await query.message.delete()
-    
     elif query.data == 'menu':
         await start(update, context, from_menu=True)
-
-    if query.data == 'next_building':
-        building_id = random.choice(list(buildings.keys()))
-        context.user_data['current_building'] = building_id
-        await show_building(query, context, user.id)
-
+        
 async def roof_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     register_user(user.id, user.username, user.first_name)
