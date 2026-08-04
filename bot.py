@@ -387,9 +387,20 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(user.id, user.username, user.first_name)
 
     if query.data == 'roof_action':
-        building_id = random.choice(list(buildings.keys()))
-        context.user_data['current_building'] = building_id
-        await show_building(query, context, user.id)
+    # Проверяем КД
+        profile = get_user_profile(user.id)
+        if profile['last_take_time']:
+            last_take = datetime.strptime(profile['last_take_time'], "%Y-%m-%d %H:%M:%S")
+            cooldown_hours = get_cooldown_hours(profile['conquered_count'])
+            time_since = datetime.now() - last_take
+            if time_since < timedelta(hours=cooldown_hours):
+                await query.edit_message_text("⏰ Ты на КД! Проверь таймер.")
+                return
+    
+    # Если КД нет — показываем ЖК
+    building_id = random.choice(list(buildings.keys()))
+    context.user_data['current_building'] = building_id
+    await show_building(query, context, user.id)
 
     elif query.data == 'take_building':
         if 'current_building' not in context.user_data:
