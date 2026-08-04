@@ -521,8 +521,7 @@ async def timer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"⏰ Осталось {hours} ч {minutes} мин")
     else:
         await update.message.reply_text("✅Можно брать ЖК.")
-
- async def show_building_from_message(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id):
+async def show_building_from_message(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id):
     building_id = context.user_data.get('current_building')
     if not building_id:
         await update.message.reply_text("❌ Ошибка: ЖК не выбран. Напиши /roof")
