@@ -492,7 +492,7 @@ async def skip_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     building_id = random.choice(list(buildings.keys()))
     context.user_data['current_building'] = building_id
 
-    await show_building_from_message(update, context, user.id))
+    await show_building_from_message(update, context, user.id)
 
 async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
