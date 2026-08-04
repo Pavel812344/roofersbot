@@ -377,10 +377,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
     
+    
     if query.data == 'roof_action':
     # Генерируем случайный ЖК
-        await query.edit_message_text("✅ Кнопка сработала!")  
-        return
+        available_buildings = random.sample(list(buildings.keys()), 1)
+        context.user_data['available_buildings'] = available_buildings
+        context.user_data['current_index'] = 0
+        await show_building(query, context, user.id)
     
     elif query.data == 'profile':
         profile = get_user_profile(user.id)
