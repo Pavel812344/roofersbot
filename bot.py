@@ -375,7 +375,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
     
-    elif query.data == 'roof_action':
+    if query.data == 'roof_action':
         available_buildings = []
         for bid in buildings:
             can_take, _ = can_take_building(user.id, bid)
