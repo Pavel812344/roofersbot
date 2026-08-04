@@ -407,12 +407,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
     
-    # Если КД нет — показываем ЖК
-    building_id = random.choice(list(buildings.keys()))
-    context.user_data['current_building'] = building_id
-    await show_building(query, context, user.id)
-    
-    # Если КД нет — показываем ЖК
+        # Если КД нет — показываем ЖК
         building_id = random.choice(list(buildings.keys()))
         context.user_data['current_building'] = building_id
         await show_building(query, context, user.id)
