@@ -296,6 +296,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: b
             "• Москва-Сити - 70%\n\n"
             "⏰ Кулдаун: 1.5–6 часов"
         )
+
+        if update.effective_chat.type == 'private':
+            reply_markup = InlineKeyboardMarkup(keyboard)
+        else:
+            reply_markup = None
+    
         if from_menu:
             try:
                 await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -306,6 +312,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, from_menu: b
             await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception as e:
         print(f"❌ start error: {e}")
+
+async def timer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/timer — показать остаток кулдауна"""
+    user = update.effective_user
+    profile = get_user_profile(user.id)
+    
+    if not profile or not profile['last_take_time']:
+        await update.message.reply_text("✅Можно брать ЖК!")
+        return
+    
+    last_take = datetime.strptime(profile['last_take_time'], "%Y-%m-%d %H:%M:%S")
+    cooldown_hours = get_cooldown_hours(profile['conquered_count'])
+    time_since = datetime.now() - last_take
+    
+    if time_since < timedelta(hours=cooldown_hours):
+        remaining = timedelta(hours=cooldown_hours) - time_since
+        hours = int(remaining.total_seconds() // 3600)
+        minutes = int((remaining.total_seconds() % 3600) // 60)
+        await update.message.reply_text(
+            f"⏰ Осталось ждать: {hours} ч {minutes} мин\n"
+            f"📊 Взято ЖК: {profile['conquered_count']}"
+        )
+    else:
+        await update.message.reply_text("✅Можно брать ЖК.")
         
 async def show_building(query, context, user_id, edit=True):
     available_buildings = context.user_data['available_buildings']
@@ -318,7 +348,11 @@ async def show_building(query, context, user_id, edit=True):
         [InlineKeyboardButton("⏭ Пропустить", callback_data='next_building')],
         [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    if update.effective_chat.type == 'private':
+        reply_markup = InlineKeyboardMarkup(keyboard)
+    else:
+        reply_markup = None
     prim_chance = "70%" if is_moscow_city(building['complex']) else "30%"
     message_text = (
         f"🏢 {building['name']}\n"
@@ -340,8 +374,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     user = query.from_user
     register_user(user.id, user.username, user.first_name)
-
-    if query.data == 'roof_action':
+    
+    elif query.data == 'roof_action':
         available_buildings = []
         for bid in buildings:
             can_take, _ = can_take_building(user.id, bid)
@@ -351,9 +385,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = [
                 [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
             ]
+            if update.effective_chat.type == 'private':
+                reply_markup = InlineKeyboardMarkup(keyboard)
+            else:
+                reply_markup = None
+        
             await query.edit_message_text(
                 "⏰ Нет доступных ЖК. Проверь таймер.",
-                reply_markup=InlineKeyboardMarkup(keyboard)
+                reply_markup=reply_markup
             )
             return
         random.shuffle(available_buildings)
@@ -370,7 +409,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
             [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
         ]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+
+        if update.effective_chat.type == 'private':
+            reply_markup = InlineKeyboardMarkup(keyboard)
+        else:
+            reply_markup = None
+            
+        await query.edit_message_text(text, reply_markup=reply_markup)
 
     elif query.data == 'check_timer':
         profile = get_user_profile(user.id)
@@ -385,18 +430,27 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 keyboard = [
                     [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
                 ]
+                if update.effective_chat.type == 'private':
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                else:
+                    reply_markup = None
                 await query.edit_message_text(
                     f"⏰ Осталось {hours} ч {minutes} мин",
-                    reply_markup=InlineKeyboardMarkup(keyboard)
+                    reply_markup=reply_markup
                 )
             else:
                 keyboard = [
                     [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
                     [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
                 ]
+                if update.effective_chat.type == 'private':
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                else:
+                    reply_markup = None
+                    
                 await query.edit_message_text(
                     "✅ Можно брать!",
-                    reply_markup=InlineKeyboardMarkup(keyboard)
+                    reply_markup=reply_markup
                 )
                 
     elif query.data == 'take_building':
@@ -411,7 +465,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
                 [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+            if update.effective_chat.type == 'private':
+                reply_markup = InlineKeyboardMarkup(keyboard)
+            else:
+                reply_markup = None
             
             await query.edit_message_text(msg, reply_markup=reply_markup)
         except:
@@ -432,9 +489,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
                 [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
             ]
+            if update.effective_chat.type == 'private':
+                reply_markup = InlineKeyboardMarkup(keyboard)
+            else:
+                reply_markup = None
             await query.edit_message_text(
                 "Больше нет ЖК",
-                reply_markup=InlineKeyboardMarkup(keyboard)
+                reply_markup=reply_markup
             )
 
 # ==================== ЗАПУСК ====================
@@ -444,6 +505,11 @@ def main():
     init_db()
     create_buildings_table()
     application = Application.builder().token(TOKEN).build()
+    application.add_handler(CommandHandler("roof", roof_command))
+    application.add_handler(CommandHandler("take", take_command))
+    application.add_handler(CommandHandler("skip", skip_command))
+    application.add_handler(CommandHandler("profile", profile_command))
+    application.add_handler(CommandHandler("timer", timer_command))
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_handler))
     loop = asyncio.get_event_loop()
