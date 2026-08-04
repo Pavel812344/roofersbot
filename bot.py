@@ -338,6 +338,8 @@ async def timer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅Можно брать ЖК.")
         
 async def show_building(query, context, user_id, edit=True):
+    await query.edit_message_text("✅ show_building вызван")
+    return
     available_buildings = context.user_data['available_buildings']
     current_index = context.user_data['current_index']
     building_id = available_buildings[current_index]
