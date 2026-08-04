@@ -338,25 +338,28 @@ async def timer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅Можно брать ЖК.")
         
 async def show_building(query, context, user_id, edit=True):
-    available_buildings = context.user_data['available_buildings']
-    current_index = context.user_data['current_index']
-    building_id = available_buildings[current_index]
+    building_id = context.user_data.get('current_building')
+    if not building_id:
+        await query.edit_message_text("❌ Ошибка: ЖК не выбран. Нажми /roof")
+        return
+    
     building = buildings[building_id]
-    context.user_data['current_building'] = building_id
+    
     keyboard = [
         [InlineKeyboardButton("✅ Взять ЖК", callback_data='take_building')],
         [InlineKeyboardButton("⏭ Пропустить", callback_data='next_building')],
         [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
     ]
-
+    
     if update.effective_chat.type == 'private':
         reply_markup = InlineKeyboardMarkup(keyboard)
     else:
         reply_markup = None
+    
     prim_chance = "70%" if is_moscow_city(building['complex']) else "30%"
     message_text = (
         f"🏢 {building['name']}\n"
-        f"📍 Комплекс: {building['complex']}\n"
+        f"📍 {building['complex']}\n"
         f"💰 Очки: {building['points']}\n"
         f"⚠️ Шанс быть принятым: {prim_chance}\n"
     )
@@ -536,15 +539,9 @@ async def timer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         minutes = int((remaining.total_seconds() % 3600) // 60)
         await update.message.reply_text(f"⏰ Осталось {hours} ч {minutes} мин")
     else:
-        await update.message.reply_text("✅ Кулдаун прошёл! Можно брать ЖК.")
+        await update.message.reply_text("✅Можно брать ЖК.")
 
 async def show_building_from_message(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id):
-    available_buildings = context.user_data.get('available_buildings', [])
-    idx = context.user_data.get('current_index', 0)
-    
-    if idx >= len(available_buildings):
-        await update.message.reply_text("❌ Нет доступных ЖК. Напиши /roof")
-        return
     
     building_id = available_buildings[idx]
     building = buildings[building_id]
@@ -556,7 +553,6 @@ async def show_building_from_message(update: Update, context: ContextTypes.DEFAU
         f"📍 {building['complex']}\n"
         f"💰 Очки: {building['points']}\n"
         f"⚠️ Шанс прима: {prim_chance}\n"
-        f"📌 Прогресс: {idx+1}/{len(available_buildings)}\n\n"
         f"/take — взять\n/skip — пропустить"
     )
     await update.message.reply_text(message_text)
