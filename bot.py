@@ -498,35 +498,101 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=reply_markup
             )
 
-async def command_to_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Перенаправляет команды (/roof, /take, /skip) в button_handler"""
+async def roof_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    command = update.message.text[1:].split()[0]  # убираем '/'
+    register_user(user.id, user.username, user.first_name)
     
-    # Сопоставляем команды с callback_data
-    mapping = {
-        'roof': 'roof_action',
-        'take': 'take_building',
-        'skip': 'next_building',
-        'profile': 'profile',
-        'timer': 'check_timer',
-        'menu': 'menu'
-    }
+    available_buildings = []
+    for bid in buildings:
+        can_take, _ = can_take_building(user.id, bid)
+        if can_take:
+            available_buildings.append(bid)
     
-    if command in mapping:
-        # Создаём "фейковый" callback_query
-        update.callback_query = type('obj', (object,), {
-            'data': mapping[command],
-            'from_user': user,
-            'message': update.message,
-            'answer': lambda *args, **kwargs: None,
-            'edit_message_text': lambda *args, **kwargs: None,
-            'edit_message_media': lambda *args, **kwargs: None,
-            'message': update.message
-        })()
-        await button_handler(update, context)
+    if not available_buildings:
+        await update.message.reply_text("⏰ Нет доступных ЖК. Проверь таймер.")
+        return
+    
+    random.shuffle(available_buildings)
+    context.user_data['available_buildings'] = available_buildings
+    context.user_data['current_index'] = 0
+    
+    await show_building_from_message(update, context, user.id)
+
+async def take_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if 'current_building' not in context.user_data:
+        await update.message.reply_text("❌ Сначала выбери ЖК через /roof")
+        return
+    
+    building_id = context.user_data['current_building']
+    success, msg, prim = take_building(user.id, building_id)
+    
+    if success:
+        await update.message.reply_text(msg)
     else:
-        await update.message.reply_text("❌ Неизвестная команда")
+        await update.message.reply_text(f"❌ {msg}")
+
+async def skip_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    available_buildings = context.user_data.get('available_buildings', [])
+    idx = context.user_data.get('current_index', 0)
+    
+    if idx + 1 < len(available_buildings):
+        context.user_data['current_index'] = idx + 1
+        await show_building_from_message(update, context, user.id)
+    else:
+        await update.message.reply_text("⏭ Больше нет ЖК. Напиши /roof")
+
+async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    profile = get_user_profile(user.id)
+    if not profile:
+        await update.message.reply_text("❌ Профиль не найден. Начни с /start")
+        return
+    text = f"📊 {profile['first_name']}\n💰 Очков: {profile['points']}\n🏆 Взято: {profile['conquered_count']}"
+    await update.message.reply_text(text)
+
+async def timer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    profile = get_user_profile(user.id)
+    if not profile or not profile['last_take_time']:
+        await update.message.reply_text("✅ Кулдаун отсутствует. Можно брать ЖК!")
+        return
+    
+    last_take = datetime.strptime(profile['last_take_time'], "%Y-%m-%d %H:%M:%S")
+    cooldown_hours = get_cooldown_hours(profile['conquered_count'])
+    time_since = datetime.now() - last_take
+    
+    if time_since < timedelta(hours=cooldown_hours):
+        remaining = timedelta(hours=cooldown_hours) - time_since
+        hours = int(remaining.total_seconds() // 3600)
+        minutes = int((remaining.total_seconds() % 3600) // 60)
+        await update.message.reply_text(f"⏰ Осталось {hours} ч {minutes} мин")
+    else:
+        await update.message.reply_text("✅ Кулдаун прошёл! Можно брать ЖК.")
+
+async def show_building_from_message(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id):
+    available_buildings = context.user_data.get('available_buildings', [])
+    idx = context.user_data.get('current_index', 0)
+    
+    if idx >= len(available_buildings):
+        await update.message.reply_text("❌ Нет доступных ЖК. Напиши /roof")
+        return
+    
+    building_id = available_buildings[idx]
+    building = buildings[building_id]
+    context.user_data['current_building'] = building_id
+    
+    prim_chance = "70%" if is_moscow_city(building['complex']) else "30%"
+    message_text = (
+        f"🏢 {building['name']}\n"
+        f"📍 {building['complex']}\n"
+        f"💰 Очки: {building['points']}\n"
+        f"⚠️ Шанс прима: {prim_chance}\n"
+        f"📌 Прогресс: {idx+1}/{len(available_buildings)}\n\n"
+        f"/take — взять\n/skip — пропустить"
+    )
+    await update.message.reply_text(message_text)
 
 # ==================== ЗАПУСК ====================
 def main():
