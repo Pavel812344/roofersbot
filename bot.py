@@ -338,8 +338,6 @@ async def timer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅Можно брать ЖК.")
         
 async def show_building(query, context, user_id, edit=True):
-    await query.edit_message_text("✅ show_building вызван")
-    return
     available_buildings = context.user_data['available_buildings']
     current_index = context.user_data['current_index']
     building_id = available_buildings[current_index]
@@ -380,9 +378,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if query.data == 'roof_action':
     # Генерируем случайный ЖК
-        available_buildings = random.sample(list(buildings.keys()), 1)
-        context.user_data['available_buildings'] = available_buildings
-        context.user_data['current_index'] = 0
+        building_id = random.choice(list(buildings.keys()))
+        context.user_data['current_building'] = building_id
         await show_building(query, context, user.id)
     
     elif query.data == 'profile':
@@ -463,25 +460,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'menu':
         await start(update, context, from_menu=True)
 
-    elif query.data == 'next_building':
-        available = context.user_data.get('available_buildings', [])
-        idx = context.user_data.get('current_index', 0)
-        if idx + 1 < len(available):
-            context.user_data['current_index'] = idx + 1
-            await show_building(query, context, user.id, edit=False)
-        else:
-            keyboard = [
-                [InlineKeyboardButton("🏢 Руфить!", callback_data='roof_action')],
-                [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
-            ]
-            if update.effective_chat.type == 'private':
-                reply_markup = InlineKeyboardMarkup(keyboard)
-            else:
-                reply_markup = None
-            await query.edit_message_text(
-                "Больше нет ЖК",
-                reply_markup=reply_markup
-            )
+    if query.data == 'next_building':
+        building_id = random.choice(list(buildings.keys()))
+        context.user_data['current_building'] = building_id
+        await show_building(query, context, user.id)
 
 async def roof_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
