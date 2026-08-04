@@ -342,20 +342,20 @@ async def show_building(query, context, user_id, edit=True):
     if not building_id:
         await query.edit_message_text("❌ Ошибка: ЖК не выбран. Нажми /roof")
         return
-    
+
     building = buildings[building_id]
-    
+
     keyboard = [
         [InlineKeyboardButton("✅ Взять ЖК", callback_data='take_building')],
         [InlineKeyboardButton("⏭ Пропустить", callback_data='next_building')],
         [InlineKeyboardButton("🏠 В меню", callback_data='menu')]
     ]
-    
-    if update.effective_chat.type == 'private':
+
+    if query.message.chat.type == 'private':
         reply_markup = InlineKeyboardMarkup(keyboard)
     else:
         reply_markup = None
-    
+
     prim_chance = "70%" if is_moscow_city(building['complex']) else "30%"
     message_text = (
         f"🏢 {building['name']}\n"
@@ -363,12 +363,20 @@ async def show_building(query, context, user_id, edit=True):
         f"💰 Очки: {building['points']}\n"
         f"⚠️ Шанс быть принятым: {prim_chance}\n"
     )
+
     try:
         with open(building['photo_path'], 'rb') as photo:
             if edit:
-                await query.edit_message_media(media=InputMediaPhoto(photo, caption=message_text), reply_markup=reply_markup)
+                await query.edit_message_media(
+                    media=InputMediaPhoto(photo, caption=message_text),
+                    reply_markup=reply_markup
+                )
             else:
-                await query.message.reply_photo(photo=photo, caption=message_text, reply_markup=reply_markup)
+                await query.message.reply_photo(
+                    photo=photo,
+                    caption=message_text,
+                    reply_markup=reply_markup
+                )
     except:
         await query.message.reply_text(message_text, reply_markup=reply_markup)
         
@@ -379,7 +387,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     register_user(user.id, user.username, user.first_name)
 
     if query.data == 'roof_action':
-        # Берём случайный ЖК
         building_id = random.choice(list(buildings.keys()))
         context.user_data['current_building'] = building_id
         await show_building(query, context, user.id)
@@ -459,21 +466,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def roof_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     register_user(user.id, user.username, user.first_name)
-    
-    available_buildings = []
-    for bid in buildings:
-        can_take, _ = can_take_building(user.id, bid)
-        if can_take:
-            available_buildings.append(bid)
-    
-    if not available_buildings:
-        await update.message.reply_text("⏰ Нет доступных ЖК. Проверь таймер.")
-        return
-    
-    random.shuffle(available_buildings)
-    context.user_data['available_buildings'] = available_buildings
-    context.user_data['current_index'] = 0
-    
+
+    building_id = random.choice(list(buildings.keys()))
+    context.user_data['current_building'] = building_id
+
     await show_building_from_message(update, context, user.id)
 
 async def take_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -481,10 +477,10 @@ async def take_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if 'current_building' not in context.user_data:
         await update.message.reply_text("❌ Сначала выбери ЖК через /roof")
         return
-    
+
     building_id = context.user_data['current_building']
     success, msg, prim = take_building(user.id, building_id)
-    
+
     if success:
         await update.message.reply_text(msg)
     else:
@@ -492,14 +488,11 @@ async def take_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def skip_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    available_buildings = context.user_data.get('available_buildings', [])
-    idx = context.user_data.get('current_index', 0)
-    
-    if idx + 1 < len(available_buildings):
-        context.user_data['current_index'] = idx + 1
-        await show_building_from_message(update, context, user.id)
-    else:
-        await update.message.reply_text("⏭ Больше нет ЖК. Напиши /roof")
+
+    building_id = random.choice(list(buildings.keys()))
+    context.user_data['current_building'] = building_id
+
+    await show_building_from_message(update, context, user.id))
 
 async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -529,18 +522,19 @@ async def timer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("✅Можно брать ЖК.")
 
-async def show_building_from_message(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id):
-    
-    building_id = available_buildings[idx]
+ async def show_building_from_message(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id):
+    building_id = context.user_data.get('current_building')
+    if not building_id:
+        await update.message.reply_text("❌ Ошибка: ЖК не выбран. Напиши /roof")
+        return
+
     building = buildings[building_id]
-    context.user_data['current_building'] = building_id
-    
     prim_chance = "70%" if is_moscow_city(building['complex']) else "30%"
     message_text = (
         f"🏢 {building['name']}\n"
         f"📍 {building['complex']}\n"
         f"💰 Очки: {building['points']}\n"
-        f"⚠️ Шанс прима: {prim_chance}\n"
+        f"⚠️ Шанс прима: {prim_chance}\n\n"
         f"/take — взять\n/skip — пропустить"
     )
     await update.message.reply_text(message_text)
