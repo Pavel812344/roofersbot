@@ -377,8 +377,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if query.data == 'roof_action':
     # Генерируем случайный ЖК
-    await query.edit_message_text("✅ Кнопка сработала!")  # ← ЭТО ДОБАВЬ
-    return
+        await query.edit_message_text("✅ Кнопка сработала!")  
+        return
     
     elif query.data == 'profile':
         profile = get_user_profile(user.id)
