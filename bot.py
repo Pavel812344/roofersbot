@@ -498,6 +498,36 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=reply_markup
             )
 
+async def command_to_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Перенаправляет команды (/roof, /take, /skip) в button_handler"""
+    user = update.effective_user
+    command = update.message.text[1:].split()[0]  # убираем '/'
+    
+    # Сопоставляем команды с callback_data
+    mapping = {
+        'roof': 'roof_action',
+        'take': 'take_building',
+        'skip': 'next_building',
+        'profile': 'profile',
+        'timer': 'check_timer',
+        'menu': 'menu'
+    }
+    
+    if command in mapping:
+        # Создаём "фейковый" callback_query
+        update.callback_query = type('obj', (object,), {
+            'data': mapping[command],
+            'from_user': user,
+            'message': update.message,
+            'answer': lambda *args, **kwargs: None,
+            'edit_message_text': lambda *args, **kwargs: None,
+            'edit_message_media': lambda *args, **kwargs: None,
+            'message': update.message
+        })()
+        await button_handler(update, context)
+    else:
+        await update.message.reply_text("❌ Неизвестная команда")
+
 # ==================== ЗАПУСК ====================
 def main():
     if not os.path.exists('photos'):
@@ -505,11 +535,11 @@ def main():
     init_db()
     create_buildings_table()
     application = Application.builder().token(TOKEN).build()
-    application.add_handler(CommandHandler("roof", roof_command))
-    application.add_handler(CommandHandler("take", take_command))
-    application.add_handler(CommandHandler("skip", skip_command))
-    application.add_handler(CommandHandler("profile", profile_command))
-    application.add_handler(CommandHandler("timer", timer_command))
+    application.add_handler(CommandHandler("roof", command_to_callback))
+    application.add_handler(CommandHandler("take", command_to_callback))
+    application.add_handler(CommandHandler("skip", command_to_callback))
+    application.add_handler(CommandHandler("profile", command_to_callback))
+    application.add_handler(CommandHandler("timer", command_to_callback))
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_handler))
     loop = asyncio.get_event_loop()
