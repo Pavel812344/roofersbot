@@ -398,9 +398,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
     
     # Если КД нет — показываем ЖК
-    building_id = random.choice(list(buildings.keys()))
-    context.user_data['current_building'] = building_id
-    await show_building(query, context, user.id)
+        building_id = random.choice(list(buildings.keys()))
+        context.user_data['current_building'] = building_id
+        await show_building(query, context, user.id)
 
     elif query.data == 'take_building':
         if 'current_building' not in context.user_data:
